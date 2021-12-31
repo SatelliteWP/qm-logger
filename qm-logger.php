@@ -55,9 +55,10 @@ add_action( 'qm/output/after', function() {
 		}
     }
 
-    $html_data = apply_filters( 'qml/output/data', $html_data );
-    $html_file = apply_filters( 'qml/output/html/filename', WP_CONTENT_DIR . '/qm-logger-html.csv' );
-    $sql_file = apply_filters( 'qml/output/sql/filename', WP_CONTENT_DIR . '/qm-logger-sql.csv' );
+    $html_data    = apply_filters( 'qml/output/html/data', $html_data );
+    $slow_queries = apply_filters( 'qml/output/sql/queries', $slow_queries );
+    $html_file    = apply_filters( 'qml/output/html/filename', WP_CONTENT_DIR . '/qm-logger-html.csv' );
+    $sql_file     = apply_filters( 'qml/output/sql/filename', WP_CONTENT_DIR . '/qm-logger-sql.csv' );
 
     qml_write_to_file( $html_file, $html_data );
 
