@@ -1,55 +1,96 @@
 <?php
 /**
- * Plugin Name: QM Logger
- * Description: Logs for Query Monitor
- * Version: 0.1
+ * Plugin Name:  QM Logger
+ * Description:  Logs for Query Monitor
+ * Version:      0.1
+ * Plugin URI:   https://github.com/SatelliteWP/qm-logger
+ * Author:       SatelliteWP
+ * Author URI:   https://www.satellitewp.com/
+ * Text Domain:  qml
+ * Domain Path:  /languages/
+ * Requires PHP: 7.4
  */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 add_action( 'qm/output/after', function() {
     global $wp;
 
-    $data = [];
+    $html_data = [];
+    $slow_queries = [];
     
     $db_queries = QM_Collectors::get( 'db_queries' );
     $overview = QM_Collectors::get( 'overview' );
 
-    $data['request'] = home_url( add_query_arg( $_GET, $wp->request ) );
+    $html_data['request'] = home_url( add_query_arg( $_GET, $wp->request ) );
 
     if ( $db_queries ) {
         $db_queries_data = $db_queries->get_data();
 
-        $data['db_total_time'] = number_format( $db_queries_data['total_time'], 4, '.', '' );
-        $data['db_requests'] = $db_queries_data['total_qs'];
+        $html_data['db_total_time'] = number_format( $db_queries_data['total_time'], 4, '.', '' );
+        $html_data['db_requests'] = $db_queries_data['total_qs'];
+
+        if ( ! empty( $db_queries_data['expensive'] ) ) {
+            foreach( $db_queries_data['expensive'] as $row ) {
+                $slow_queries[] = array(
+                    'request' => home_url( add_query_arg( $_GET, $wp->request ) ),
+                    'sql' => $row['sql'],
+                    #'caller' => $row['caller'],
+                    #'caller_name' => $row['caller_name'],
+                    'ltime' => $row['ltime'],
+                );
+            }
+        }
     }
 
     if ( $overview ) {
         $overview_data = $overview->get_data();
-        $data['html_time'] = number_format( $overview_data['time_taken'], 4, '.', '' );
+        $html_data['html_time'] = number_format( $overview_data['time_taken'], 4, '.', '' );
 
         if ( ! empty( $overview_data['memory'] ) ) {
             // MB
-			$data['memory'] = number_format( $overview_data['memory'] / 1024 / 1024, 4, '.', '' );
+			$html_data['memory'] = number_format( $overview_data['memory'] / 1024 / 1024, 4, '.', '' );
 		}
     }
 
-    $data = apply_filters( 'qml/output/data', $data );
-    $output_file = apply_filters( 'qml/output/html/filename', WP_CONTENT_DIR . '/qm-logger-html.csv' );
+    $html_data = apply_filters( 'qml/output/data', $html_data );
+    $html_file = apply_filters( 'qml/output/html/filename', WP_CONTENT_DIR . '/qm-logger-html.csv' );
+    $sql_file = apply_filters( 'qml/output/sql/filename', WP_CONTENT_DIR . '/qm-logger-sql.csv' );
 
-    $headers = null;
-    $file_exists = file_exists( $output_file );
+    qml_write_to_file( $html_file, $html_data );
 
-    $fh = fopen( $output_file, 'a' );
-    if ( $fh === false ) {
-        trigger_error( __( 'QML: Could not create log file - ', 'qml' ) . $output_file );
+    foreach( $slow_queries as $query ) {
+        qml_write_to_file( $sql_file, $query );
     }
-    
+
+}, 1000 );
+
+
+/**
+ * Create a CSV file (if needed) and write CSV data to it
+ * 
+ * @param string $filename Filename
+ * @param array  $data     Data to write
+ * 
+ */
+function qml_write_to_file( $filename, $data ) {
+    $headers = null;
+    $file_exists = file_exists( $filename );
+
+    $fh = fopen( $filename, 'a' );
+    if ( $fh === false ) {
+        trigger_error( __( 'QML: Could not create log file - ', 'qml' ) . $filename );
+    }
+
     $headers = [];
     if ( ! $file_exists ) {
         $headers = array_keys( $data );
         fputcsv( $fh, $headers );
     }
     else {
-        $header = trim( fgets( fopen( $output_file, 'r' ) ) );
+        $header = trim( fgets( fopen( $filename, 'r' ) ) );
         $headers = explode( ',', $header );
     }
 
@@ -61,7 +102,6 @@ add_action( 'qm/output/after', function() {
     if ( ! empty( $csv_data ) ) {
         fputcsv( $fh, $csv_data );
     }
-    
-    fclose( $fh );
 
- }, 1000 );
+    fclose( $fh );
+}
