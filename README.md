@@ -37,4 +37,4 @@ Deux filtres ont été créés pour modifier les données récupérées et ajout
 
 **Attention :** si vous ajoutez de l'information supplémentaire, les fichiers actuels de logs doivent être supprimés. Autrement, 
 les nouvelles informations ne seront pas ajoutées puisque cela briserait la logique du CSV. Un nouveau fichier doit être créé
-pour que la nouvelle structure soit appliquées.
+pour que la nouvelle structure soit appliquée.
