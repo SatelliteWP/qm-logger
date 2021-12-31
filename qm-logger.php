@@ -18,12 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action( 'qm/output/after', function() {
     global $wp;
 
+    $now = wp_date( 'c' );
     $html_data = [];
     $slow_queries = [];
     
     $db_queries = QM_Collectors::get( 'db_queries' );
     $overview = QM_Collectors::get( 'overview' );
 
+    $html_data['date'] = $now;
     $html_data['request'] = home_url( add_query_arg( $_GET, $wp->request ) );
 
     if ( $db_queries ) {
@@ -35,11 +37,12 @@ add_action( 'qm/output/after', function() {
         if ( ! empty( $db_queries_data['expensive'] ) ) {
             foreach( $db_queries_data['expensive'] as $row ) {
                 $slow_queries[] = array(
+                    'date'    => $now,
                     'request' => home_url( add_query_arg( $_GET, $wp->request ) ),
-                    'sql' => $row['sql'],
+                    'sql'     => $row['sql'],
+                    'ltime'   => $row['ltime'],
                     #'caller' => $row['caller'],
                     #'caller_name' => $row['caller_name'],
-                    'ltime' => $row['ltime'],
                 );
             }
         }

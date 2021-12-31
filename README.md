@@ -8,6 +8,7 @@ Deux fichiers peuvent être créés:
 
 Par défaut, le **HTML Logger** récupère :
 
+- `date` : Date et heure du log
 - `request` : Url ayant été demandée
 - `db_total_time` : Temps total des accès à la base de données
 - `db_requests` : Nombre de requêtes faites à la base de données
@@ -16,6 +17,7 @@ Par défaut, le **HTML Logger** récupère :
 
 Par défaut, le **Slow queries Logger** récupère :
 
+- `date` : Date et heure du log
 - `request` : Url ayant été demandée
 - `sql` : Requête SQL exécutée
 - `ltime` : Temps d'exécution de la requête
